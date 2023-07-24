@@ -1,14 +1,21 @@
 package server.model.npcs.instances;
 
 import server.model.npcs.Coordinate;
+import server.model.npcs.instances.nex.AncientPrisonInstance;
 import server.model.npcs.instances.nex.NexInstance;
 import server.model.npcs.instances.puro_puro.PuroPuroInstance;
+import server.model.players.Player;
+import server.util.TextUtils;
 import server.world.WorldMap;
 import server.world.bounding.WorldArea;
+
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public enum InstanceId {
 
     NEX(WorldMap.NEX_AREA, WorldMap.NEX_BANK_TELEPORT, NexInstance::new, NexInstance::load),
+    ANCIENT_PRISON(WorldMap.ANCIENT_PRISON, WorldMap.ANCIENT_PRISON_ENTRY, AncientPrisonInstance::new, AncientPrisonInstance::load),
     PURO_PURO(WorldMap.PURO_PURO, WorldMap.PURO_PURO_TELEPORT, PuroPuroInstance::new, PuroPuroInstance::load),
     ;
 
@@ -38,4 +45,25 @@ public enum InstanceId {
     public final InstanceBuilder builder;
     public final Runnable loader;
     public final int heightOffset;
+
+    public boolean enabled = true;
+    public boolean invalidateKilltimes = false;
+
+    /**
+     * Provides default behavior for adding players to a new solo instance if the Predicate matches
+     */
+    public Predicate<Player> forceSoloInstance = p -> false;
+
+    /**
+     * Called when the player needs to be moved outside an instance (removal, login, etc.)
+     */
+    public Consumer<Player> moveToPortalArea = p -> p.getPA().movePlayer(InstanceId.this.outside);
+
+    /*
+     * Util
+     */
+
+    public static String formatName(InstanceId id){
+        return TextUtils.capitalize(id.name().replace("_", " "));
+    }
 }

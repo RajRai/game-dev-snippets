@@ -6,6 +6,10 @@ import server.model.players.Player;
 import server.model.players.PlayerHandler;
 import server.observers.Observers;
 import server.observers.players.ActionObserver;
+import server.util.TextUtils;
+import server.world.Clan;
+import server.world.ClanChatHandler;
+import server.world.WorldMap;
 
 /**
  * To place a basic private portal in the world, call PrivatePortal.Builder.create().build(). Usually in a static block.
@@ -121,7 +125,7 @@ public class PrivatePortal {
             return this;
         }
 
-        public Builder defaultActionObserver(int menuEntryIndex, InstanceId boss){
+        public Builder defaultPrivateActionObserver(int menuEntryIndex, InstanceId boss){
             actionObserver = new ActionObserver() {
                 @Override
                 public String getName() {
@@ -132,8 +136,24 @@ public class PrivatePortal {
                 public boolean onObjectOption(Player c, int obId, int obX, int obY, int obFace, int entry) {
                     if (obId == Builder.this.obId && obX == x && obY == y){
                         if (entry == menuEntryIndex){
+                            if (WorldMap.NEX_AREA.contains(c)) return true;
                             Instance instance = InstanceManager.getInstance(c);
                             if (instance != null){
+                                if (instance.boss != boss){
+                                    c.getDH().build()
+                                        .sendOptions(
+                                            "You're a member of an instance", null,
+                                            "in another area", null,
+                                            "", null,
+                                            "Leave the other instance.", () -> {
+                                                InstanceManager.removePlayer(c, instance);
+                                                c.getPA().closeAllWindows();
+                                            },
+                                            "Close.", () -> c.getPA().closeAllWindows()
+                                        )
+                                        .run();
+                                    return true;
+                                }
                                 c.getDH().build()
                                     .sendTitledOptions(
                                         "Private instance options",
@@ -143,6 +163,7 @@ public class PrivatePortal {
                                             } else {
                                                 c.sendMessage("You can't join the instance right now.");
                                             }
+                                            c.getPA().closeAllWindows();
                                         },
                                         "Leave the group", () -> {
                                             if (instance.getOwnerId() == c.getPlayerId() && !instance.canOwnerTransfer()){
@@ -167,7 +188,7 @@ public class PrivatePortal {
                                         "Private instance options",
                                         "Create an instance", () -> {
                                             InstanceManager.createInstance(c, boss, InstanceType.PRIVATE);
-                                            c.sendMessage("You created a private instance.");
+                                            c.sendMessage("You created a private instance. Players can now join you.");
                                             c.getPA().closeAllWindows();
                                         },
                                         "Join an instance", () -> {
@@ -187,10 +208,19 @@ public class PrivatePortal {
                                                 new ChallengeRequest(c, p, "requests to join your instance.", (request -> {
                                                     Instance check = InstanceManager.getInstance(p);
                                                     if (check == joiningInstance){
+                                                        c.sendMessage("Your request to join the instance was accepted.");
+                                                        p.sendMessage("You accept the request from " + TextUtils.capitalize(c.playerName) + ".");
                                                         joiningInstance.addParticipant(c);
                                                     }
                                                 }));
+                                                c.getPA().closeAllWindows();
                                             });
+                                        },
+                                        "Join clan instance.", () -> {
+                                            Clan clan = ClanChatHandler.clans.get(c.clanChannel);
+                                            Instance clanInstance = InstanceManager.getOrCreateClanInstance(clan, c, boss);
+                                            clanInstance.playerEnteredWithValidation(c);
+                                            c.getPA().closeAllWindows();
                                         },
                                         "Never mind.", () -> c.getPA().closeAllWindows()
                                     ).run();

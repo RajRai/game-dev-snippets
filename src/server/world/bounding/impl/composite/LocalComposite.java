@@ -1,6 +1,7 @@
-package server.world.bounding;
+package server.world.bounding.impl.composite;
 
 import server.model.Entity;
+import server.world.bounding.LocalArea;
 
 public class LocalComposite implements LocalArea {
 
