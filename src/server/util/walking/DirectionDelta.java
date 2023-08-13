@@ -1,8 +1,17 @@
 package server.util.walking;
 
 import server.model.npcs.Coordinate;
+import server.util.Misc;
 
 public record DirectionDelta(int dx, int dy) {
+
+    public static DirectionDelta from(Coordinate from, Coordinate to) {
+        return new DirectionDelta(to.getX() - from.getX(), to.getY() - from.getY());
+    }
+
+    public static DirectionDelta from(int fromX, int fromY, int toX, int toY){
+        return new DirectionDelta(toX-fromX, toY-fromY);
+    }
 
     public DirectionDelta scale(int factor) {
         return scale(factor, factor);
@@ -18,6 +27,10 @@ public record DirectionDelta(int dx, int dy) {
 
     public DirectionDelta plus(DirectionDelta other) {
         return new DirectionDelta(dx + other.dx, dy + other.dy);
+    }
+
+    public DirectionDelta clip() {
+        return new DirectionDelta(Misc.clamp(dx, -1, 1), Misc.clamp(dy, -1, 1));
     }
 
     /**
@@ -62,9 +75,5 @@ public record DirectionDelta(int dx, int dy) {
         }
 
         return new DirectionDelta(rotatedDx, rotatedDy);
-    }
-
-    public static DirectionDelta from(Coordinate from, Coordinate to) {
-        return new DirectionDelta(to.getX() - from.getX(), to.getY() - from.getY());
     }
 }

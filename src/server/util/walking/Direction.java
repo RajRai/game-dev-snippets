@@ -1,6 +1,20 @@
 package server.util.walking;
 
+import server.model.npcs.Coordinate;
+
 public class Direction {
+
+    public static Direction from(DirectionDelta delta){
+        return Directions.DELTA_TO_DIRECTION.getOrDefault(delta.clip(), Directions.NOSTEP);
+    }
+
+    public static Direction from(Coordinate from, Coordinate to){
+        return from(DirectionDelta.from(from, to));
+    }
+
+    public static Direction from(int fromX, int fromY, int toX, int toY){
+        return from(DirectionDelta.from(fromX, fromY, toX, toY));
+    }
 
     public final String text;
     public final int dx;
@@ -8,7 +22,7 @@ public class Direction {
     public final int clip;
     public final int value; // for now, this is only confirmed compatible with forceMovement
 
-    public Direction(String name, int dx, int dy, int clip, int value){
+    protected Direction(String name, int dx, int dy, int clip, int value){
         this.text = name;
         this.dx = dx;
         this.dy  = dy;
@@ -29,14 +43,28 @@ public class Direction {
             '}';
     }
 
-    // If the clip &'d with the map/shootable data for a tile is not equal to 0, the tile cannot be entered from that direction.
-    // Essentially, each bit in the last byte of the map data represents if the tile is blocked when entering from a direction.
-    // By &'ing it with the clip values, the result will be 0 when there are no blockages entering from the checked directions, or non-zero otherwise
-    // To check if a square can be entered, you need to check the map data against the & clip in the direction for the tile you're entering, and
-    // the & clip in the opposite direction for the tile you're leaving
-    // These might or might not be wrong. It's more of a concept/plan currently
+    public Direction opposite() {
+        return from(delta().scale(-1));
+    }
+
+    public boolean isDiagonal(){
+        return dx != 0 && dy != 0;
+    }
+
+    public Direction[] decomposeDiagonal(){
+        return new Direction[]{
+            from(new DirectionDelta(dx, 0)),
+            from(new DirectionDelta(0, dy))
+        };
+    }
+
+    public Direction[] perpendicular(){
+        return new Direction[]{
+            from(delta().rotate(Directions.ROTATE_90_DEGREES)),
+            from(delta().rotate(Directions.ROTATE_270_DEGREES))
+        };
+    }
 
     // long term todos:
     // make all client systems use the value mapping from the value field
-    // validate the clip values
 }
