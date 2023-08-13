@@ -1,6 +1,6 @@
 package server.world.bounding;
 
-import server.model.Entity;
+import server.model.players.Player;
 
 public interface WorldArea {
 
@@ -8,8 +8,10 @@ public interface WorldArea {
 
     LocalArea localize(int baseHeight);
 
-    default boolean contains(Entity e){
-        return e != null && contains(e.absX, e.absY);
+    default boolean contains(Locatable l){
+        Player p = null;
+        if (l instanceof Player) p = (Player) l;
+        return l != null && (contains(l.getX(), l.getY()) || (p != null && contains(p.teleportToX, p.teleportToY) || (p != null && contains(p.teleX, p.teleY))));
     }
 
 }

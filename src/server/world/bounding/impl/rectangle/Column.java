@@ -1,6 +1,8 @@
 package server.world.bounding.impl.rectangle;
 
 import server.model.npcs.Coordinate;
+import server.util.walking.DirectionDelta;
+import server.util.walking.Directions;
 import server.world.bounding.LocalArea;
 import server.world.bounding.WorldArea;
 
@@ -48,7 +50,7 @@ public class Column implements Iterable<Coordinate>, WorldArea {
         return new RectangleIterator();
     }
 
-    public Coordinate makeCoordinate(int x, int y) {
+    protected Coordinate makeCoordinate(int x, int y) {
         return new Coordinate(x, y);
     }
 
@@ -73,5 +75,25 @@ public class Column implements Iterable<Coordinate>, WorldArea {
             return nextCoordinate;
         }
     }
+
+    public Coordinate rotateCoordinate(Coordinate originalCoord, int rotation) {
+        rotation = (rotation % 4 + 4) % 4;
+        Coordinate center = new Coordinate((xMin + xMax) / 2, (yMin + yMax) / 2);
+        DirectionDelta delta = DirectionDelta.from(center, originalCoord);
+        DirectionDelta centerShift = new DirectionDelta(0, 0);
+        // Rotate the center for even grid boxes
+        if ((xMax - xMin) % 2 == 0 && (yMax - yMin) % 2 == 0) {
+            if (rotation == Directions.ROTATE_90_DEGREES) {
+                centerShift = new DirectionDelta(0, -1);
+            } else if (rotation == Directions.ROTATE_180_DEGREES) {
+                centerShift = new DirectionDelta(-1, -1);
+            } else if (rotation == Directions.ROTATE_270_DEGREES) {
+                centerShift = new DirectionDelta(-1, 0);
+            }
+        }
+
+        return center.plus(centerShift).plus(delta.rotate(rotation));
+    }
+
 
 }

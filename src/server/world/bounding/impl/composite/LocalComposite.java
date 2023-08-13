@@ -1,7 +1,7 @@
 package server.world.bounding.impl.composite;
 
-import server.model.Entity;
 import server.world.bounding.LocalArea;
+import server.world.bounding.Locatable;
 
 public class LocalComposite implements LocalArea {
 
@@ -21,12 +21,12 @@ public class LocalComposite implements LocalArea {
     }
 
     @Override
-    public boolean contains(Entity e) {
-        if (e == null){
+    public boolean contains(Locatable l) {
+        if (l == null){
             return false;
         }
         for (LocalArea c : children){
-            if (c.contains(e))
+            if (c.contains(l))
                 return true;
         }
         return false;

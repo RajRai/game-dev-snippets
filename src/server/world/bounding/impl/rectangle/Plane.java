@@ -1,8 +1,8 @@
 package server.world.bounding.impl.rectangle;
 
-import server.model.Entity;
 import server.model.npcs.Coordinate;
 import server.world.bounding.LocalArea;
+import server.world.bounding.Locatable;
 
 public class Plane extends Column implements LocalArea {
 
@@ -14,21 +14,22 @@ public class Plane extends Column implements LocalArea {
     }
 
     public Plane(int centerX, int centerY, int pad, int height){
-        this(centerX - pad, centerY - pad, centerX + pad, centerY + pad, height);
+        super(centerX, centerY, pad);
+        this.height = height;
     }
 
     @Override
-    public Coordinate makeCoordinate(int x, int y) {
+    protected Coordinate makeCoordinate(int x, int y) {
         return new Coordinate(x, y, height);
     }
 
     @Override
     public boolean contains(int x, int y, int z) {
-        return x >= this.xMin && x <= this.xMax && y >= this.yMin && y <= this.yMax && z == this.height;
+        return super.contains(x, y) && z == this.height;
     }
 
     @Override
-    public boolean contains(Entity e) {
-        return LocalArea.super.contains(e);
+    public boolean contains(Locatable l) {
+        return LocalArea.super.contains(l);
     }
 }
