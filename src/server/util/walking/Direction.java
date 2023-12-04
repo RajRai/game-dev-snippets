@@ -5,7 +5,28 @@ import server.model.npcs.Coordinate;
 public class Direction {
 
     public static Direction from(DirectionDelta delta){
-        return Directions.DELTA_TO_DIRECTION.getOrDefault(delta.clip(), Directions.NOSTEP);
+        DirectionDelta clipped = delta.clip();
+        int dx = clipped.dx();
+        int dy = clipped.dy();
+        if (dx == 1 && dy == 0) {
+            return Directions.EAST;
+        } else if (dx == -1 && dy == 0) {
+            return Directions.WEST;
+        } else if (dx == 0 && dy == 1) {
+            return Directions.NORTH;
+        } else if (dx == 0 && dy == -1) {
+            return Directions.SOUTH;
+        } else if (dx == 1 && dy == 1) {
+            return Directions.NORTHEAST;
+        } else if (dx == -1 && dy == 1) {
+            return Directions.NORTHWEST;
+        } else if (dx == 1 && dy == -1) {
+            return Directions.SOUTHEAST;
+        } else if (dx == -1 && dy == -1) {
+            return Directions.SOUTHWEST;
+        } else {
+            return Directions.NOSTEP;
+        }
     }
 
     public static Direction from(Coordinate from, Coordinate to){
@@ -22,16 +43,24 @@ public class Direction {
     public final int clip;
     public final int value; // for now, this is only confirmed compatible with forceMovement
 
-    protected Direction(String name, int dx, int dy, int clip, int value){
-        this.text = name;
-        this.dx = dx;
-        this.dy  = dy;
-        this.clip = clip;
-        this.value = value;
-    }
-
     public DirectionDelta delta(){
         return new DirectionDelta(this.dx, this.dy);
+    }
+
+    public Direction opposite() {
+        return opposite;
+    }
+
+    public boolean isDiagonal(){
+        return dx != 0 && dy != 0;
+    }
+
+    public Direction[] decomposeDiagonal(){
+        return cardinals;
+    }
+
+    public Direction[] perpendicular(){
+        return perpendiculars;
     }
 
     @Override
@@ -43,26 +72,27 @@ public class Direction {
             '}';
     }
 
-    public Direction opposite() {
-        return from(delta().scale(-1));
+    Direction(String name, int dx, int dy, int clip, int value){
+        this.text = name;
+        this.dx = dx;
+        this.dy  = dy;
+        this.clip = clip;
+        this.value = value;
     }
 
-    public boolean isDiagonal(){
-        return dx != 0 && dy != 0;
+    private Direction opposite;
+    final void initializeOpposite(Direction opposite){
+        this.opposite = this.opposite == null ? opposite : this.opposite;
     }
 
-    public Direction[] decomposeDiagonal(){
-        return new Direction[]{
-            from(new DirectionDelta(dx, 0)),
-            from(new DirectionDelta(0, dy))
-        };
+    private Direction[] cardinals;
+    final void initializeCardinals(Direction... cardinals){
+        this.cardinals = this.cardinals == null ? cardinals : this.cardinals;
     }
 
-    public Direction[] perpendicular(){
-        return new Direction[]{
-            from(delta().rotate(Directions.ROTATE_90_DEGREES)),
-            from(delta().rotate(Directions.ROTATE_270_DEGREES))
-        };
+    private Direction[] perpendiculars;
+    final void initializePerpendiculars(Direction... perpendiculars){
+        this.perpendiculars = this.perpendiculars == null ? perpendiculars : this.perpendiculars;
     }
 
     // long term todos:

@@ -35,18 +35,26 @@ public class TaskScheduler {
         scheduleTask(baseDateTime, runEvery, task);
     }
 
+    private static int dailyQuietCount = 0;
     public static void scheduleDailyQuietHours(Runnable task){
-        scheduleTask("12:00 AM", usWest, Duration.ofDays(1), task);
+        ZonedDateTime midnight = Processing.utcDateTime
+            .withZoneSameLocal(usWest)
+            .truncatedTo(ChronoUnit.DAYS)
+            .plus(Duration.ofMinutes(dailyQuietCount++));
+
+        scheduleTask(midnight, Duration.ofDays(1), task);
     }
 
+
+    private static int weeklyQuietCount = 0;
     // Midnight on Tuesday (Tuesday 12:00 AM)
     public static void scheduleWeeklyQuietHours(Runnable task){
         ZonedDateTime nextMondayMidnight = Processing.utcDateTime
             .withZoneSameInstant(usWest)
             .with(TemporalAdjusters.next(DayOfWeek.TUESDAY))
             .truncatedTo(ChronoUnit.DAYS)
-            .with(LocalTime.MIDNIGHT);
-
+            .with(LocalTime.MIDNIGHT)
+            .plus(Duration.ofMinutes(weeklyQuietCount++));
 
         scheduleTask(nextMondayMidnight, Duration.ofDays(7), task);
     }
@@ -111,6 +119,7 @@ public class TaskScheduler {
         });
 
         while (true){
+            Processing.utcDateTime = ZonedDateTime.now();
             process();
         }
     }

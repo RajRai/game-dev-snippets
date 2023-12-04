@@ -1,9 +1,7 @@
 package server.util.walking;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Directions {
 
@@ -21,12 +19,26 @@ public class Directions {
     public static final List<Direction> CARDINAL_DIRECTIONS = Arrays.asList(EAST, NORTH, WEST, SOUTH);
     public static final List<Direction> DIAGONAL_DIRECTIONS = Arrays.asList(NORTHEAST, NORTHWEST, SOUTHWEST, SOUTHEAST);
 
-    // Delta to Direction map
-    protected static final Map<DirectionDelta, Direction> DELTA_TO_DIRECTION = new HashMap<>();
     static {
         for (Direction direction : DIRECTIONS) {
-            // Initialize the delta to direction mappings
-            DELTA_TO_DIRECTION.put(direction.delta(), direction);
+            DirectionDelta delta = direction.delta();
+
+            // Initialize opposite reference
+            direction.initializeOpposite(
+                Direction.from(delta.scale(-1))
+            );
+
+            // Initialize diagonal decomposition
+            direction.initializeCardinals(
+                Direction.from(delta.scale(1, 0)),
+                Direction.from(delta.scale(0, 1))
+            );
+
+            // Initialize perpendiculars
+            direction.initializePerpendiculars(
+                Direction.from(delta.rotate(Directions.ROTATE_90_DEGREES)),
+                Direction.from(delta.rotate(Directions.ROTATE_270_DEGREES))
+            );
         }
     }
 
